@@ -32,10 +32,9 @@ public class AssetController {
 	}
 
 	@PostMapping
-	public ResponseEntity<AssetResponse> create(@RequestHeader("X-tenant-id") String tenantId,
-			@Valid @RequestBody AssetRequest request) {
+	public ResponseEntity<AssetResponse> create(@Valid @RequestBody AssetRequest request) {
 
-		return ResponseEntity.status(HttpStatus.CREATED).body(assetService.createAsset(tenantId, request));
+		return ResponseEntity.status(HttpStatus.CREATED).body(assetService.createAsset(request));
 
 	}
 
@@ -45,9 +44,9 @@ public class AssetController {
 	}
 
 	@GetMapping("/search")
-	public Page<AssetResponse> search(@RequestHeader("X-tenant-id") String tenantId, AssetFilterRequest filterRequest,
+	public Page<AssetResponse> search(AssetFilterRequest filterRequest,
 			@PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
-		return assetService.search(tenantId, filterRequest, pageable);
+		return assetService.search(filterRequest, pageable);
 	}
 
 }

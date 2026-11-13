@@ -3,10 +3,13 @@ package com.pulse.common.exception;
 import java.util.Map;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+
+import com.pulse.tenant.exception.TenantAlreadyExistsException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -26,6 +29,11 @@ public class GlobalExceptionHandler {
 	@ExceptionHandler(BadRequestException.class)
 	public ResponseEntity<Map<String, String>> handleBadRequest(BadRequestException ex) {
 		return ResponseEntity.badRequest().body(Map.of("error", ex.getMessage()));
+	}
+
+	@ExceptionHandler(TenantAlreadyExistsException.class)
+	public ProblemDetail handleDuplicate(TenantAlreadyExistsException ex) {
+		return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
 	}
 
 }

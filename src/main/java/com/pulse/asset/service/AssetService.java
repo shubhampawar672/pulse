@@ -1,6 +1,6 @@
 package com.pulse.asset.service;
 
-import java.util.Optional;
+import java.util.UUID;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -11,25 +11,32 @@ import com.pulse.asset.dto.AssetRequest;
 import com.pulse.asset.dto.AssetResponse;
 import com.pulse.asset.entity.Asset;
 import com.pulse.asset.repository.AssetRepository;
+import com.pulse.common.context.TenantContext;
 import com.pulse.common.exception.BadRequestException;
 import com.pulse.common.exception.ResourceNotFoundException;
 import com.pulse.specification.AssetSpecification;
+import com.pulse.tenant.repository.TenantRepository;
+
+import jakarta.transaction.Transactional;
 
 @Service
 public class AssetService {
 
 	private AssetRepository assetRepository;
+	private TenantRepository tenantRepository;
 
-	public AssetService(AssetRepository assetRepository) {
+	public AssetService(AssetRepository assetRepository, TenantRepository tenantRepository) {
 		this.assetRepository = assetRepository;
+		this.tenantRepository = tenantRepository;
 	}
 
-	public AssetResponse createAsset(String tenantId, AssetRequest assetRequest) {
-		Asset asset = new Asset.Builder().tenantId(tenantId).externalId(assetRequest.externalId())
-				.AssteStatus(assetRequest.status()).AssteType(assetRequest.type()).tagsCsv(assetRequest.tagsCsv())
-				.name(assetRequest.name()).build();
-		asset = assetRepository.save(asset);
-		return toResponse(asset);
+	@Transactional
+	public AssetResponse createAsset(AssetRequest request) {
+		UUID tenantId = TenantContext.get();
+		Asset asset = new Asset.Builder().tenantId(tenantRepository.getReferenceById(tenantId))
+				.externalId(request.externalId()).AssteStatus(request.status()).AssetType(request.type())
+				.tagsCsv(request.tagsCsv()).name(request.name()).build();
+		return toResponse(assetRepository.save(asset));
 	}
 
 	public AssetResponse getById(String tenantId, Long id) throws ResourceNotFoundException {
@@ -44,7 +51,8 @@ public class AssetService {
 				a.getCreatedAt());
 	}
 
-	public Page<AssetResponse> search(String tenantId, AssetFilterRequest request, Pageable pageable) {
+	public Page<AssetResponse> search(AssetFilterRequest request, Pageable pageable) {
+		UUID tenantId = TenantContext.get();
 		if (pageable.getPageNumber() < 0) {
 			throw new BadRequestException("Invalid page number");
 
